@@ -1,7 +1,8 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {FaceSnap} from "../models/face-snap.model";
-import {FaceSnapsService} from "../services/face-snaps.service";
+import {FaceSnap} from "../../../core/models/face-snap.model";
+import {FaceSnapsService} from "../../../core/services/face-snaps.service";
 import {ActivatedRoute} from "@angular/router";
+import {Observable, tap} from "rxjs";
 
 @Component({
   selector: 'app-single-face-snap',
@@ -9,7 +10,7 @@ import {ActivatedRoute} from "@angular/router";
   styleUrls: ['./single-face-snap.component.scss']
 })
 export class SingleFaceSnapComponent implements OnInit{
-  faceSnap!: FaceSnap;
+  faceSnap$!: Observable<FaceSnap>;
   snapText!: string;
 
   constructor(private faceSnapsService: FaceSnapsService,
@@ -18,16 +19,20 @@ export class SingleFaceSnapComponent implements OnInit{
   ngOnInit() {
     this.snapText = 'Oh Snap!'
     const snapId = +this.route.snapshot.params['id'];
-    this.faceSnap = this.faceSnapsService.getFaceSnapById(snapId);
+    this.faceSnap$ = this.faceSnapsService.getFaceSnapById(snapId);
   }
 
-  onAddSnap(){
+  onAddSnap(facesnapId: number){
     if(this.snapText === 'Oh Snap!'){
-      this.faceSnapsService.likeFaceSnapById(this.faceSnap.id,'snap');
-      this.snapText = 'Oops, un Snap!';
+      this.faceSnap$ = this.faceSnapsService.likeFaceSnapById(facesnapId,'snap').pipe(
+        tap(() =>this.snapText = 'Oops, un Snap!')
+      );
+
     }else{
-      this.faceSnapsService.likeFaceSnapById(this.faceSnap.id,'unsnap');
-      this.snapText = 'Oh Snap!';
+      this.faceSnap$ = this.faceSnapsService.likeFaceSnapById(facesnapId,'unsnap').pipe(
+        tap(() => this.snapText = 'Oh Snap!')
+      );
+
     }
   }
 }
